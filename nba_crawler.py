@@ -3,6 +3,10 @@ import requests
 import re
 import pandas as pd
 import sqlite3
+import numpy as np
+
+conn = sqlite3.connect('/Users/jameszhu/desktop/DFS/nba_database.db')
+c = conn.cursor()
 
 def getPlayers(link):
 	req = requests.get(link)
@@ -48,7 +52,42 @@ for i in links:
 	header = getHeaders(i)
 	players = getPlayers(i)
 	df = pd.DataFrame(player_data, columns = header, index = players)
-	df.to_sql(nba)
+	StdBoxScore = pd.DataFrame()
+	#AdvBoxScore = pd.DataFrame()
+	advanced = np.where(df.index.values == "Advanced Box Score Stats")[0]
+	basic = np.where(df.index.values == "Basic Box Score Stats")[0]
+	stdBoxScore = pd.concat([df[0:advanced[0]],df[basic[0]:advanced[1]]])
+	#advBoxScore = pd.concat([df[advanced[0]:basic[0]],df[advanced[1]:len(df)]])
+	stdBoxScore.to_sql('nba_data', conn, if_exists='append')
+'''
+c.execute(
+CREATE TABLE "nba_data" (
+"index" TEXT,
+  "MP" TEXT,
+  "FG" TEXT,
+  "FGA" TEXT,
+  "FG%" TEXT,
+  "3P" TEXT,
+  "3PA" TEXT,
+  "3P%" TEXT,
+  "FT" TEXT,
+  "FTA" TEXT,
+  "FT%" TEXT,
+  "ORB" TEXT,
+  "DRB" TEXT,
+  "TRB" TEXT,
+  "AST" TEXT,
+  "STL" TEXT,
+  "BLK" TEXT,
+  "TOV" TEXT,
+  "PF" TEXT,
+  "PTS" TEXT
+);
+)
+'''
+conn.commit()
+conn.close
+
 
 
 
